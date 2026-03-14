@@ -1,4 +1,5 @@
 import process from "node:process";
+import os from "node:os";
 
 import clipboardy from "clipboardy";
 import WebSocket from "ws";
@@ -8,7 +9,10 @@ function usage() {
   console.log(
     [
       "Usage:",
-      "  npm run agent -- --server http://127.0.0.1:8787 --room 123456",
+      "  npm run agent -- --room 123456",
+      "  npm run agent -- --port 8787 --room 123456",
+      "  npm run agent -- --server http://192.168.1.23:8787 --room 123456",
+      "  npm run agent -- --lan --port 8787 --room 123456",
       "",
       "Notes:",
       "  - Run this on the computer to write clipboard reliably (no browser restrictions).",
@@ -18,11 +22,13 @@ function usage() {
 }
 
 function parseArgs(argv) {
-  const args = { server: "", room: "" };
+  const args = { server: "", port: "", room: "", lan: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--server") args.server = argv[++i] ?? "";
+    else if (a === "--port") args.port = argv[++i] ?? "";
     else if (a === "--room") args.room = argv[++i] ?? "";
+    else if (a === "--lan") args.lan = true;
     else if (a === "-h" || a === "--help") args.help = true;
   }
   return args;
@@ -34,7 +40,7 @@ if (args.help) {
   process.exit(0);
 }
 
-const serverBase = args.server || process.env.SERVER || "http://127.0.0.1:8787";
+const port = Number.parseInt(args.port || process.env.PORT || "8787", 10) || 8787;
 const roomId = (args.room || process.env.ROOM || "").trim();
 
 if (!/^\d{6}$/.test(roomId)) {
@@ -42,6 +48,43 @@ if (!/^\d{6}$/.test(roomId)) {
   console.error("Missing/invalid --room (expected 6 digits).");
   usage();
   process.exit(2);
+}
+
+function isPrivateIpv4(ip) {
+  const parts = ip.split(".").map((p) => Number.parseInt(p, 10));
+  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return false;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  return false;
+}
+
+function pickLanIpv4() {
+  const ifaces = os.networkInterfaces();
+  const ips = [];
+  for (const ifname of Object.keys(ifaces)) {
+    for (const addr of ifaces[ifname] ?? []) {
+      if (!addr) continue;
+      if (addr.family !== "IPv4") continue;
+      if (addr.internal) continue;
+      if (!isPrivateIpv4(addr.address)) continue;
+      ips.push(addr.address);
+    }
+  }
+  ips.sort((a, b) => (a.startsWith("192.168.") ? -1 : 0) - (b.startsWith("192.168.") ? -1 : 0) || a.localeCompare(b));
+  return ips[0] || "";
+}
+
+let serverBase = args.server || process.env.SERVER || "";
+if (!serverBase) {
+  serverBase = `http://127.0.0.1:${port}`;
+}
+
+if (args.lan && !args.server) {
+  const lanIp = pickLanIpv4();
+  if (lanIp) serverBase = `http://${lanIp}:${port}`;
 }
 
 const wsUrl = serverBase.replace(/^http/, "ws").replace(/\/$/, "") + `/ws?room=${encodeURIComponent(roomId)}&role=receiver`;
@@ -94,4 +137,3 @@ function connect() {
 }
 
 connect();
-

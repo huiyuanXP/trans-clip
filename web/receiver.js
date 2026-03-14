@@ -11,9 +11,12 @@ const roomPill = document.getElementById("roomPill");
 const senderPill = document.getElementById("senderPill");
 const wsPill = document.getElementById("wsPill");
 const clipPill = document.getElementById("clipPill");
+const clipHint = document.getElementById("clipHint");
 const shareHint = document.getElementById("shareHint");
 const senderLinkInput = document.getElementById("senderLinkInput");
 const copySenderLinkBtn = document.getElementById("copySenderLinkBtn");
+const agentCmdInput = document.getElementById("agentCmdInput");
+const copyAgentCmdBtn = document.getElementById("copyAgentCmdBtn");
 
 const lastText = document.getElementById("lastText");
 const copyBtn = document.getElementById("copyBtn");
@@ -61,6 +64,7 @@ function updateShareHint() {
   if (!roomId) {
     setText(shareHint, "点击“生成新房间”，然后用手机打开链接或输入房间号。");
     senderLinkInput.value = "";
+    agentCmdInput.value = "";
     return;
   }
   const base = getPublicBase();
@@ -70,11 +74,16 @@ function updateShareHint() {
       "当前接收端是 localhost（仅本机可访问）。请在上面填“给手机用的访问地址”，例如 http://192.168.x.x:8787。",
     );
     senderLinkInput.value = "";
+    agentCmdInput.value = "";
     return;
   }
   const senderUrl = `${base}/sender.html?room=${encodeURIComponent(roomId)}`;
   setText(shareHint, `手机打开：${senderUrl}`);
   senderLinkInput.value = senderUrl;
+
+  // Agent is meant to run on the same computer as the server.
+  const port = location.port || "8787";
+  agentCmdInput.value = `npm run agent -- --port ${port} --room ${roomId}`;
 }
 
 function setWsState({ ok, text }) {
@@ -94,9 +103,23 @@ function clipboardCapability() {
 
 function updateClipboardPill() {
   const cap = clipboardCapability();
-  if (cap.ok) setPill(clipPill, { ok: true, text: "剪贴板：可写" });
-  else if (cap.hasApi && !cap.secure) setPill(clipPill, { ok: false, text: "剪贴板：需 HTTPS/localhost" });
-  else setPill(clipPill, { ok: false, text: "剪贴板：受限" });
+  if (cap.ok) {
+    setPill(clipPill, { ok: true, text: "剪贴板：可写" });
+    setText(clipHint, "提示：多数浏览器仍需要先点一次“复制到剪贴板”作为用户手势激活。");
+    return;
+  }
+  if (cap.hasApi && !cap.secure) {
+    setPill(clipPill, { ok: false, text: "剪贴板：需 HTTPS/localhost" });
+    const port = location.port ? `:${location.port}` : "";
+    const localhostUrl = `${location.protocol}//127.0.0.1${port}/receiver.html${location.search || ""}`;
+    setText(
+      clipHint,
+      `当前通过局域网 IP 打开（非安全上下文），浏览器会禁用 Clipboard API。建议在电脑用 ${localhostUrl} 打开接收端；手机仍用局域网链接打开输入端。`,
+    );
+    return;
+  }
+  setPill(clipPill, { ok: false, text: "剪贴板：受限" });
+  setText(clipHint, "当前环境无法使用 Clipboard API；可用按钮复制（兼容模式）或使用 Agent。");
 }
 
 function updateCopyBtnState() {
@@ -193,6 +216,15 @@ copyBtn.addEventListener("click", () => copyNow().catch(() => {}));
 savePublicBaseBtn.addEventListener("click", () => setPublicBase(publicBaseInput.value));
 useLanBtn.addEventListener("click", () => setPublicBase(lanSelect.value));
 copySenderLinkBtn.addEventListener("click", () => copySenderLink().catch(() => {}));
+copyAgentCmdBtn.addEventListener("click", async () => {
+  const cmd = agentCmdInput.value ?? "";
+  if (!cmd) {
+    setText(copyHint, "请先生成房间号");
+    return;
+  }
+  const ok = await copyToClipboard(cmd);
+  setText(copyHint, ok ? "已复制 Agent 命令" : "复制 Agent 命令失败");
+});
 
 autoCopyToggle.checked = localStorage.getItem("transclip.autocopy") === "1";
 autoCopyToggle.addEventListener("change", () => {
