@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trans-clip</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="card">
+      <h1>trans-clip</h1>
+      <p class="muted">手机输入 → 电脑接收（剪贴板）</p>
+
+      <section class="grid">
+        <a class="btn" href="/receiver.html">我是电脑（接收端）</a>
+        <a class="btn secondary" href="/sender.html">我是手机（输入端）</a>
+      </section>
+
+      <details class="hint">
+        <summary>关于“自动写入剪贴板”的限制</summary>
+        <p>
+          纯网页在多数浏览器里无法<strong>后台持续</strong>自动改写系统剪贴板（需要用户手势/权限，且通常只在页面激活时有效）。
+          本项目的接收页会尽力自动写入；失败时会提供“一键复制”作为兜底。
+        </p>
+      </details>
+    </main>
+  </body>
+</html>
+

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trans-clip · 接收端</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="card">
+      <div class="row" style="justify-content: space-between">
+        <div>
+          <h1>接收端（电脑）</h1>
+          <p class="muted">接收来自手机的文字。尝试写入剪贴板；失败时可点击按钮复制。</p>
+        </div>
+        <a class="btn secondary" href="/">返回</a>
+      </div>
+
+      <div class="row">
+        <div class="pill mono" id="roomPill">房间：—</div>
+        <div class="pill" id="senderPill">输入端：—</div>
+        <div class="pill" id="wsPill">连接：—</div>
+        <div class="pill" id="clipPill">剪贴板：—</div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button class="btn" id="newRoomBtn" type="button">生成新房间</button>
+        <label class="pill" style="cursor: pointer">
+          <input id="autoCopyToggle" type="checkbox" style="margin: 0 6px 0 0" />
+          尝试自动写入剪贴板
+        </label>
+      </div>
+      <div class="spacer"></div>
+      <label class="small" for="publicBaseInput">给手机用的访问地址（电脑在局域网的 IP/域名）</label>
+      <div class="inlineForm">
+        <input
+          class="input mono"
+          id="publicBaseInput"
+          placeholder="例如 http://192.168.1.23:8787 或 192.168.1.23:8787"
+        />
+        <button class="btn secondary" id="savePublicBaseBtn" type="button">保存</button>
+      </div>
+      <div class="inlineForm">
+        <select class="input mono" id="lanSelect" style="max-width: 100%">
+          <option value="">自动检测本机局域网 IP…</option>
+        </select>
+        <button class="btn secondary" id="useLanBtn" type="button">使用所选 IP</button>
+      </div>
+      <p class="small" id="shareHint">—</p>
+
+      <div class="spacer"></div>
+      <label class="small" for="senderLinkInput">手机打开链接（带房间号）</label>
+      <div class="inlineForm">
+        <input class="input mono" id="senderLinkInput" readonly placeholder="生成房间后自动出现…" />
+        <button class="btn" id="copySenderLinkBtn" type="button">一键复制</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <label class="small" for="lastText">最新内容</label>
+      <textarea id="lastText" readonly placeholder="等待手机输入…" style="min-height: 220px"></textarea>
+      <div class="row">
+        <button class="btn secondary" id="copyBtn" type="button">复制到剪贴板</button>
+        <span class="small" id="copyHint">—</span>
+      </div>
+
+      <details class="hint">
+        <summary>为什么“自动写入”有时不生效？</summary>
+        <p>
+          浏览器为防止恶意网站篡改剪贴板，通常要求“用户手势”才能写入（例如点击按钮、键盘操作），并且可能要求页面保持前台激活。
+          所以本页会尽力自动写入；若失败，点“复制到剪贴板”即可。
+        </p>
+      </details>
+    </main>
+
+    <script type="module" src="/receiver.js"></script>
+  </body>
+</html>

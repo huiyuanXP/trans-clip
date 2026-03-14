@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trans-clip · 输入端</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="card">
+      <div class="row" style="justify-content: space-between">
+        <div>
+          <h1>输入端（手机）</h1>
+          <p class="muted">在下面输入（或语音输入）文字，实时发送到接收端。</p>
+        </div>
+        <a class="btn secondary" href="/">返回</a>
+      </div>
+
+      <div class="row">
+        <div class="pill mono" id="roomPill">房间：—</div>
+        <div class="pill" id="wsPill">连接：—</div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <label class="small" for="roomInput">房间号（6 位）</label>
+      <div class="row">
+        <input class="input mono" id="roomInput" inputmode="numeric" maxlength="6" placeholder="例如 123456" />
+        <button class="btn" id="connectBtn" type="button">连接</button>
+      </div>
+      <p class="small">建议：先在电脑打开“接收端”，它会生成房间号。</p>
+
+      <div class="spacer"></div>
+
+      <label class="small" for="textInput">输入内容（每次停顿后自动发送）</label>
+      <textarea id="textInput" placeholder="在这里输入或用手机语音输入法…"></textarea>
+      <div class="row">
+        <button class="btn secondary" id="sendBtn" type="button">立即发送</button>
+        <span class="small" id="sendHint">未连接</span>
+      </div>
+    </main>
+
+    <script type="module" src="/sender.js"></script>
+  </body>
+</html>
+
